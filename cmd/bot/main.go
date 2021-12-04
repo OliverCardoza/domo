@@ -4,9 +4,8 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"net/http"
 	"os"
-	"os/signal"
-	"syscall"
 
 	"github.com/OliverCardoza/domo/domo"
 )
@@ -37,11 +36,20 @@ func main() {
 		return
 	}
 
+	if token == "" {
+		token = os.Getenv("DISCORD_TOKEN")
+		if token == "" {
+			fmt.Printf("error discord token not provided via -t arg or DISCORD_TOKEN env var")
+			return
+		}
+	}
+
 	bot, err := domo.NewDomoBot(token, config)
 	if err != nil {
 		fmt.Printf("error creating bot: %v", err)
 		return
 	}
+	defer bot.Close()
 
 	// Open the channel to start receiving.
 	err = bot.Open()
@@ -50,14 +58,17 @@ func main() {
 		return
 	}
 
-	// Listen for kill command.
-	sc := make(chan os.Signal, 1)
-	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
-	<-sc
-
-	// Clean up bot.
-	err = bot.Close()
-	if err != nil {
-		fmt.Printf("error closing bot: %v", err)
+	// Implement HTTP health check, which is somewhat required by cloud run.
+	port := ":8080"
+	if osPort := os.Getenv("PORT"); osPort != "" {
+		port = ":" + osPort
 	}
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "Everything is under control, situation normal. How are you?")
+	})
+	err = http.ListenAndServe(port, nil)
+	if err != nil {
+		fmt.Printf("http serving error")
+	}
+
 }

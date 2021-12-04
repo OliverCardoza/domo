@@ -24,9 +24,26 @@ To run the bot using the main config:
 go run cmd/bot/main.go -t ${TOKEN_GOES_HERE} -c config/bot_main.json
 ```
 
-## Processes
+## Deployment
 
-### Discord App setup
+First ensure `gcloud` is installed
+([Instructions](https://cloud.google.com/sdk/docs/install)):
+
+```bash
+# Install ko
+go install github.com/google/ko@latest
+```
+
+```bash
+export KO_DOCKER_REPO=northamerica-northeast2-docker.pkg.dev/domo-334121/domo
+gcloud auth configure-docker northamerica-northeast2-docker.pkg.dev
+ko publish ./cmd/bot/
+```
+
+From there go to the Cloud Run page and push a new instance, selecting latest
+image. All of the secrets/configs/run server are manually configured.
+
+## Discord App setup
 
 1. Visit https://discord.com/developers/applications
 1. Create a new application
@@ -34,7 +51,7 @@ go run cmd/bot/main.go -t ${TOKEN_GOES_HERE} -c config/bot_main.json
 1. Disable "Public Bot": this prevents random people adding it to their servers
 1. Enable "Presence Intent": provides access to view user presence updates
 
-### Add to a Server
+## Add to a Server
 
 Complete the authorization flow by visiting the following link:
 
@@ -46,7 +63,7 @@ This link identifies the `domo` app id and includes the required permission set:
 * Send Messages
 * Send Messages in Threads
 
-### Register domo update channel
+## Register domo update channel
 
 Each server domo is added to must be added to the domo config. This is
 inconvenient but is fine for the initial intent of using this in only a few
@@ -58,9 +75,16 @@ will publish its update messages.
 
 ## Links
 
-* Discord App: https://discord.com/developers/applications/916474357256171561
-* discord.js guide: https://pkg.go.dev/github.com/bwmarrin/discordgo
+* Deployment Links
+  * Discord App: https://discord.com/developers/applications/916474357256171561
+  * Cloud Project: https://console.cloud.google.com/home/dashboard?project=domo-334121
 * discordgo docs: https://pkg.go.dev/github.com/bwmarrin/discordgo
+* Useful Guides
+  * [How to run discord bot on cloud run](https://emilwypych.com/2020/10/25/how-to-run-discord-bot-on-cloud-run/)
+  * [discord.js introduction](https://discordjs.guide/#before-you-begin)
+* Google Cloud docs
+  * [Cloud Run Pricing](https://cloud.google.com/run/pricing)
+  * [Cloud Run: Build and Deploy Go](https://cloud.google.com/run/docs/quickstarts/build-and-deploy/go)
 * Discord API pages
   * [Channel Resource](https://discord.com/developers/docs/resources/channel)
   * [Voice State Object](https://discord.com/developers/docs/resources/voice#voice-state-object)

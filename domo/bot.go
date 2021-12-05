@@ -143,6 +143,21 @@ func (d *DomoBot) voiceStateUpdate(s *discordgo.Session, e *discordgo.VoiceState
 		return
 	}
 
+	updateCh, err := s.Channel(updateChannelId)
+	if err != nil {
+		log.Printf("error getting domo update channel: %v", err)
+		return
+	}
+	if updateCh.ParentID != ch.ParentID {
+		// Filter out events when they have a different channel category from the
+		// update channel. This is a bit of a hack to deal with the fact the bot
+		// update could reveal the fact someone joined a private channel.
+		// So long as the update channel has the same visibility as all voice
+		// channels you want to monitor this works fine. Channel category is
+		// used here as a proxy for visibility.
+		return
+	}
+
 	if d.updatedRecently(e.GuildID) {
 		// Filter out this event because last update was too recent.
 		return

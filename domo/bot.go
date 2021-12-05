@@ -49,6 +49,7 @@ type DomoBotConfig struct {
 		GuildId             string `json:"guild_id"`
 		DomoUpdateChannelId string `json:"domo_update_channel_id"`
 	} `json:"servers"`
+	RateLimitSec int `json:"rate_limit_sec"`
 }
 
 // Returns the domo update channel id for the provided guild id
@@ -66,8 +67,21 @@ func (d *DomoBotConfig) domoUpdateChannelId(guildId string) string {
 type DomoBot struct {
 	session *discordgo.Session
 	config  DomoBotConfig
+	// Map from GuildId to the last time domo sent an update message.
+	updateTimes map[string]time.Time
 
 	fomoFunc fomoFunc
+}
+
+// Returns true if this guild has received a domo update message recently.
+// Recently is defined by the DomoBotConfig.RateLimitSec field.
+func (d *DomoBot) updatedRecently(guildId string) bool {
+	updateTime, found := d.updateTimes[guildId]
+	if found {
+		rateLimitPeriod := time.Duration(d.config.RateLimitSec) * time.Second
+		return time.Now().Before(updateTime.Add(rateLimitPeriod))
+	}
+	return false
 }
 
 func (d *DomoBot) Open() error {
@@ -106,10 +120,16 @@ func (d *DomoBot) voiceStateUpdate(s *discordgo.Session, e *discordgo.VoiceState
 		return
 	}
 
-	if e.Suppress {
-		// Filter out events for users that are muted.
+	if e.Suppress || e.SelfMute || e.SelfDeaf || e.Mute || e.Deaf {
+		// Filter out events for users that are muted/deafened.
 		// Users that are AFK are often muted and moved to a dedicated "Inactive" channel.
-		// This effectivelyb filters them from creating domo updates.
+		// This effectively filters them from creating domo updates.
+		return
+	}
+
+	if e.BeforeUpdate != nil && e.BeforeUpdate.GuildID == e.GuildID {
+		// Filter out events where a user switches channels in the same server.
+		// This relies on internal session cache so will miss some events.
 		return
 	}
 
@@ -123,6 +143,12 @@ func (d *DomoBot) voiceStateUpdate(s *discordgo.Session, e *discordgo.VoiceState
 		return
 	}
 
+	if d.updatedRecently(e.GuildID) {
+		// Filter out this event because last update was too recent.
+		return
+	}
+
+	d.updateTimes[e.GuildID] = time.Now()
 	_, err = s.ChannelMessageSend(updateChannelId, d.fomoFunc())
 	if err != nil {
 		log.Printf("error sending domo update message: %v", err)
@@ -138,8 +164,9 @@ func NewDomoBot(token string, config DomoBotConfig) (*DomoBot, error) {
 	}
 
 	return &DomoBot{
-		session:  session,
-		config:   config,
-		fomoFunc: newFomoFunc(),
+		session:     session,
+		config:      config,
+		fomoFunc:    newFomoFunc(),
+		updateTimes: make(map[string]time.Time),
 	}, nil
 }

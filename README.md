@@ -3,7 +3,7 @@
 domo is a Discord bot to help you manage your FOMO (fear of missing out).
 
 It sends a notification when people join a voice channel in your server.
-I made this because I found myself frequently polling a server to see if anyone
+I made this because I found myself frequently checking a server to see if anyone
 was there and LFG. Now I can rely on domo to push this info to me instead.
 
 ## How it works
@@ -11,14 +11,58 @@ was there and LFG. Now I can rely on domo to push this info to me instead.
 The bot is added to a server and listens to
 [voice state update](https://discord.com/developers/docs/topics/gateway#update-voice-state)
 events. When it encounters an event of someone joining a voice channel it posts
-a message to a configured text channel.
+a message to a configured text channel. Once installed in a server, users can
+mute the bot or the update channel if they don't want to receive domo updates.
 
 Initially the update messages were a bit spammy so a configurable rate limit
 was added. This can be used to prevent someone rapidly joining and leaving a
 channel from spamming messages.
 
-Once installed in a server, users can mute the bot or the update channel if
-they don't want to receive domo updates.
+## Add to a Server
+
+NOTE: At the moment this is only a private bot. You can self-host using the code
+and deployment instructions in this repo.
+
+### Authorize the Bot
+
+Complete the authorization flow by visiting the following link:
+
+* https://discord.com/api/oauth2/authorize?client_id=916474357256171561&permissions=274877910016&scope=bot%20applications.commands
+
+This link identifies the `domo` app id and includes the required permission set:
+
+* Read Messages/View Channels
+* Send Messages
+* Send Messages in Threads
+
+### Register domo update channel
+
+The domo config (JSON file) must be updated for each server domo is added to.
+This is inconvenient but is fine for now since the goal isn't to make this a
+public bot. It also saves the hassle of integrating a secondary storage system.
+
+Update `config/bot_main.json` with the server's `GuildID` and a channel ID
+where `domo` has permission to post messages. This channel is where `domo`
+will publish its update messages. A `rate_limit_sec` value can also be
+configured to limit how often `domo` posts.
+
+### Channel Category
+
+To avoid accidentally revealing when people join private voice channels the
+bot filters voice events when the voice channel category does not match the
+domo update channel category. This means if domo is configured to update a
+text channel in the `Main` category it will only report voice channel joins
+in the `Main` category. The lack of a category (root) will match other voice
+channels in root.
+
+This is a bit of a hack to avoid dealing with comparing the visibility of
+the text channel with each voice channel. The proper way to do this would be
+to compare identify all roles/users which can see the update channel: `T`.
+Then identify all roles/users which can see the voice channel from the event:
+`V`. Then verify that `V` is a superset of `T` before posting.
+
+The channel category acts as a reasonable proxy for visibiltiy because you
+can configure all channels in a category to have the same visibility.
 
 ## Development
 
@@ -65,7 +109,7 @@ NOTE: This relies on some manually configured defaults which were set up in
 Cloud Console. The most notable are "secrets" which are used to provide the
 container the bot config (JSON file) and discord token (env var).
 
-## Discord App setup
+## Initial Discord App setup
 
 Below is a historical account of how this was configured:
 
@@ -73,32 +117,6 @@ Below is a historical account of how this was configured:
 1. Create a new application
 1. Within the app go to "Bot section and create a bot
 1. Disable "Public Bot": this prevents random people adding it to their servers
-
-## Add to a Server
-
-Complete the authorization flow by visiting the following link:
-
-* https://discord.com/api/oauth2/authorize?client_id=916474357256171561&permissions=274877910016&scope=bot%20applications.commands
-
-This link identifies the `domo` app id and includes the required permission set:
-
-* Read Messages/View Channels
-* Send Messages
-* Send Messages in Threads
-
-NOTE: This will only work if @OliverCardoza does it because the bot is listed
-as a private bot.
-
-## Register domo update channel
-
-The domo config (JSON file) must be updated for each server domo is added to.
-This is inconvenient but is fine for now since the goal isn't to make this a
-public bot. It also saves the hassle of integrating a secondary storage system.
-
-Update `config/bot_main.json` with the server's `GuildID` and a channel ID
-where `domo` has permission to post messages. This channel is where `domo`
-will publish its update messages. A `rate_limit_sec` value can also be
-configured to limit how often `domo` posts.
 
 ## Links
 

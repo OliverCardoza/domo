@@ -14,6 +14,8 @@ events. When it encounters an event of someone joining a voice channel it posts
 a message to a configured text channel. Once installed in a server, users can
 mute the bot or the update channel if they don't want to receive domo updates.
 
+<img src="./assets/demo.webp" style="display: block; margin: auto;">
+
 Initially the update messages were a bit spammy so a configurable rate limit
 was added. This can be used to prevent someone rapidly joining and leaving a
 channel from spamming messages.

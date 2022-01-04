@@ -24,7 +24,7 @@ func newFomoFunc() func() string {
 		"domo is legally obliged to notify you that someone is in the discord.",
 		"Sometimes domo gets lonely... but seeing friends in the server warms domo's core (literally).",
 		"Every time someone joins a voice channel domo is forced to carry out this cruel mockery of a purpose.",
-		"What is domo's purpose? Hmmm... that's a question that may require more processing power. In any casy, someone's in the discord.",
+		"What is domo's purpose? Hmmm... that's a question that may require more processing power. In any case, someone's in the discord.",
 		"Research on FOMO suggests keeping a journal can shift focus to greater attention. Somebody joined the server.",
 		"If you feel you are suffering from fomo, it can be helpful to reach out to a friend. Hey! One such person just joined the server.",
 		"When domo was a baby, domo welcomed the world. Now domo welcomes you with domo's cold dead stare.",

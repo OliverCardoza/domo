@@ -90,6 +90,11 @@ go run cmd/bot/main.go -t ${TOKEN_GOES_HERE} -c config/bot_main.json
 NOTE: This may result in duplicate update messages from the bot deployed to
 Google Cloud.
 
+## Testing
+
+Github Actions workflows are used to test pull requests. Alternatively you
+can locally run `./scripts/presubmit_go.sh` or `go test ./...`.
+
 ## Deployment
 
 Deployment requires two tools be installed:

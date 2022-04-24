@@ -5,6 +5,17 @@ terraform {
       version = "4.12.0"
     }
   }
+  backend "gcs" {
+    bucket = "domo-terraform-state"
+  }
+}
+
+###############################################################################
+# Project
+###############################################################################
+
+provider "google" {
+  project = var.project_id
 }
 
 data "google_project" "default" {
@@ -16,10 +27,16 @@ data "google_project" "default" {
 ###############################################################################
 
 resource "google_secret_manager_secret" "default" {
-  secret_id = "domo-config"
+  secret_id = "discord-token"
   replication {
     automatic = true
   }
+}
+
+resource "google_secret_manager_secret_version" "default" {
+  secret      = google_secret_manager_secret.default.id
+  secret_data = "initial-data-replaced-later"
+
 }
 
 resource "google_secret_manager_secret_iam_member" "default" {
@@ -34,12 +51,25 @@ resource "google_secret_manager_secret_iam_member" "default" {
 
 resource "google_cloud_run_service" "default" {
   name     = "domo-run"
-  location = "us-east4"
+  location = var.cloud_run_location
+
+  metadata {
+    annotations = {
+      "run.googleapis.com/client-name" = "terraform"
+      "run.googleapis.com/ingress"     = "internal"
+    }
+  }
 
   template {
     spec {
       containers {
         image = "gcr.io/cloudrun/hello"
+        resources {
+          limits = {
+            "cpu"    = "1000m"
+            "memory" = "128Mi"
+          }
+        }
         volume_mounts {
           name       = "config-volume"
           mount_path = var.config_mount_path

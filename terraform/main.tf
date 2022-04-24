@@ -36,7 +36,6 @@ resource "google_secret_manager_secret" "default" {
 resource "google_secret_manager_secret_version" "default" {
   secret      = google_secret_manager_secret.default.id
   secret_data = "initial-data-replaced-later"
-
 }
 
 resource "google_secret_manager_secret_iam_member" "default" {

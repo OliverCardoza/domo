@@ -1,0 +1,2 @@
+# Ignore terraform cache
+terraform/.terraform*

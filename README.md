@@ -125,6 +125,25 @@ Below is a historical account of how this was configured:
 1. Within the app go to "Bot section and create a bot
 1. Disable "Public Bot": this prevents random people adding it to their servers
 
+## Cloud Setup
+
+[Terraform](https://www.terraform.io/) is used to configure the cloud infra
+to run the bot. It is currently configured on GCP. Steps:
+
+1. Create a GCP project
+1. Create a GCS bucket for terraform state
+1. Install `terraform-cli`: https://learn.hashicorp.com/tutorials/terraform/install-cli
+1. Set the project id in `terraform/main.tfvars`
+1. Set the Terraform bucket id in `terraform/main.tf` (can't be set as a variable)
+1. Export the project id as an env var: `GOOGLE_PROJECT=$PROJECT_ID`
+1. Run terraform
+    ```
+    terraform -chdir=terraform init
+    terraform -chdir=terraform validate
+    terraform -chdir=terraform plan -var-file=main.tfvars
+    terraform -chdir=terraform apply -var-file=main.tfvars
+    ```
+
 ## Links
 
 * Application Links
